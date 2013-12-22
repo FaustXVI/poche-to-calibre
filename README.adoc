@@ -1,0 +1,37 @@
+poche-to-calibre
+================
+
+== Goal
+
+This project is a script for http://calibre-ebook.com/[calibre] in order to get http://www.inthepoche.com/[poche]
+ bookmarks in epub format so you can read it later, off-line, on your e-reader.
+
+== Prerequires
+
+* a poche account on http://app.inthepoche.com/ or on a self-hosted server.
+* calibre installed
+
+== Installation
+
+Download the _pocheToCalibre.py_ file.
+
+The, in calibre, click on the down arrow next to the _fetch news_ button, then on _Add a custom news source_.
+A  windows apears and let you configure your news source. Click on the _Smitch to advanced mode_ button and 
+copy/paste the content of the _pocheToCalibre.py_ file in the textarea. You should have something like that :
+
+image::doc/img/copy-paste.png[]
+
+Then click on _Add/Update recipe_ and _Close_ the window (Clibre may say you'll lose any unsaved changes but 
+since you saved, this is not an issue).
+
+Now click one the same arrow next to the _fetch news_ button and click on _Schedule news download_. In the new window,
+select _Custom_ then _Poche_.
+
+image::doc/img/form.png[]
+
+This is now working as any news stream :
+
+* Schedule the downloads
+* Fill-in your poche login and password
+* Enjoy
+
