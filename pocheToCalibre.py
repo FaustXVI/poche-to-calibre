@@ -5,6 +5,7 @@ from calibre.ebooks.BeautifulSoup import BeautifulSoup
 
 class NYTimes(BasicNewsRecipe):
 
+    appURL      = 'http://app.inthepoche.com'
     title       = 'Poche'
     __author__  = 'Xavier Detant'
     description = 'Ma poche'
@@ -15,7 +16,7 @@ class NYTimes(BasicNewsRecipe):
     def get_browser(self):
         br = BasicNewsRecipe.get_browser()
         if self.username is not None and self.password is not None:
-            br.open('http://app.inthepoche.com/u/' + self.username)
+            br.open(self.appURL + '/u/' + self.username)
             br.select_form(name='loginform')
             br['login']   = self.username
             br['password'] = self.password
@@ -23,7 +24,7 @@ class NYTimes(BasicNewsRecipe):
         return br
 
     def parse_index(self):
-        baseURL = 'http://app.inthepoche.com/u/'+self.username+'/'
+        baseURL = self.appURL + '/u/'+self.username+'/'
         soup = self.index_to_soup(baseURL+'index.php')
         articles = {}
         key = None
