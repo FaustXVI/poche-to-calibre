@@ -15,7 +15,7 @@ class NYTimes(BasicNewsRecipe):
     def get_browser(self):
         br = BasicNewsRecipe.get_browser()
         if self.username is not None and self.password is not None:
-            br.open('http://app.inthepoche.com/u/FaustXVI/')
+            br.open('http://app.inthepoche.com/u/' + self.username)
             br.select_form(name='loginform')
             br['login']   = self.username
             br['password'] = self.password
