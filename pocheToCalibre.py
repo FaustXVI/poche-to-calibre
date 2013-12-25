@@ -14,7 +14,7 @@ class NYTimes(BasicNewsRecipe):
     remove_tags_after  = dict(id='article')
 
     def get_browser(self):
-        br = BasicNewsRecipe.get_browser()
+        br = BasicNewsRecipe.get_browser(self)
         if self.username is not None and self.password is not None:
             br.open(self.appURL + '/u/' + self.username)
             br.select_form(name='loginform')
