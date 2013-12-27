@@ -15,23 +15,26 @@ This project is a script for http://calibre-ebook.com/[calibre] in order to get 
 
 Download the _pocheToCalibre.py_ file.
 
-The, in calibre, click on the down arrow next to the _fetch news_ button, then on _Add a custom news source_.
-A  windows apears and let you configure your news source. Click on the _Smitch to advanced mode_ button and 
-copy/paste the content of the _pocheToCalibre.py_ file in the textarea. You should have something like that :
+Then, in calibre, click on the down arrow next to the _fetch news_ button, then on _Add a custom news source_.
+In the appeared window you can configure your news source. Click on the _Smitch to advanced mode_ button and 
+copy/paste the contents of the _pocheToCalibre.py_ file to the textarea. You should have something like that:
 
 image::doc/img/copy-paste.png[]
 
-Then click on _Add/Update recipe_ and _Close_ the window (Clibre may say you'll lose any unsaved changes but 
+Additional step for self-hosted Poche: update the _appURL_ variable in script, e.g:
+
+`http://example.com/poche/`
+
+Then click on _Add/Update recipe_ and _Close_ the window (Calibre may say you'll lose any unsaved changes, but 
 since you saved, this is not an issue).
 
-Now click one the same arrow next to the _fetch news_ button and click on _Schedule news download_. In the new window,
+Now click on the same arrow next to the _fetch news_ button and click on _Schedule news download_. In the new window,
 select _Custom_ then _Poche_.
 
 image::doc/img/form.png[]
 
-This is now working as any news stream :
+This is now working as any news stream:
 
 * Schedule the downloads
 * Fill-in your poche login and password
 * Enjoy
-
