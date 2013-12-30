@@ -1,7 +1,3 @@
-import re
-from calibre import strftime
-from calibre.web.feeds.recipes import BasicNewsRecipe
-
 
 class Poche(BasicNewsRecipe):
 
@@ -15,15 +11,19 @@ class Poche(BasicNewsRecipe):
     remove_tags_before = dict(id='article')
     remove_tags_after = dict(id='article')
 
+    def get_base_url(self):
+        base_url = self.app_url
+        if self.app_url == 'http://app.inthepoche.com': 
+            base_url = base_url + '/u/' + self.username + '/'
+        return base_url
+
     def get_browser(self):
         br = BasicNewsRecipe.get_browser(self)
 
         # poche login
         if self.username and self.password:
-            br.open(self.app_url + '/u/' + self.username) \
-                if self.app_url == 'http://app.inthepoche.com' \
-                else br.open(self.app_url)  # self-hosted poche
-
+            base_url = get_base_url(self)
+            br.open(base_url)
             # submit the login form using credentials
             br.select_form(name='loginform')
             br['login'] = self.username
@@ -33,10 +33,7 @@ class Poche(BasicNewsRecipe):
         return br
 
     def parse_index(self):
-
-        base_url = self.app_url + '/u/' + self.username + '/' \
-            if self.app_url == 'http://app.inthepoche.com' \
-            else self.app_url  # self-hosted poche
+        base_url = get_base_url()
 
         # init values before loop
         page_count = 1  # poche page iterator
