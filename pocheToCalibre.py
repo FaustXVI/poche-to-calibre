@@ -9,8 +9,8 @@ class Poche(BasicNewsRecipe):
     max_articles_per_feed = 15
 
     title = 'Poche'
-    __author__ = 'Xavier Detant'
-    description = 'Ma poche'
+    __author__ = 'Xavier Detant, Dmitry Sandalov'
+    description = 'Gets articles from your poche server'
     needs_subscription = True
     remove_tags_before = dict(id='article')
     remove_tags_after = dict(id='article')
