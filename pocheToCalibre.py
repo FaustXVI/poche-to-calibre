@@ -5,8 +5,9 @@ from calibre.web.feeds.recipes import BasicNewsRecipe
 
 class Poche(BasicNewsRecipe):
 
-    app_url = 'http://app.inthepoche.com'
-    max_articles_per_feed = 15
+    app_url = 'http://app.inthepoche.com'  # self-hosted or managed poche
+    max_articles_per_feed = 15  # articles in output file
+    contents_key = 'domain'  # [domain|read-time]
 
     title = 'Poche'
     __author__ = 'Xavier Detant, Dmitry Sandalov'
@@ -65,11 +66,8 @@ class Poche(BasicNewsRecipe):
                 if not a:
                     continue
 
-                # use reading time as a key
-                key = self.tag_to_string(div.find(
-                    'a', attrs={'class': ['reading-time']}))
-
                 # extract article info
+                key = get_contents_key(self, div)
                 url = base_url + a['href']
                 title = self.tag_to_string(a, use_alt=False)
                 description = url
@@ -98,7 +96,21 @@ class Poche(BasicNewsRecipe):
 
 
 def get_base_url(self):
+    """Gets poche base url. """
     url = self.app_url + '/u/' + self.username + '/' \
         if self.app_url == 'http://app.inthepoche.com' \
         else self.app_url + '/'  # self-hosted poche
     return url
+
+
+def get_contents_key(self, div):
+    """Gets key tag from article. """
+
+    if self.contents_key == 'read-time':
+        a_class = 'reading-time'
+    else:
+        a_class = 'tool link'
+
+    key = self.tag_to_string(div.find(
+        'a', attrs={'class': [a_class]}))
+    return key
