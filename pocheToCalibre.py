@@ -20,9 +20,8 @@ class Poche(BasicNewsRecipe):
 
         # poche login
         if self.username and self.password:
-            br.open(self.app_url + '/u/' + self.username) \
-                if self.app_url == 'http://app.inthepoche.com' \
-                else br.open(self.app_url)  # self-hosted poche
+            base_url = get_base_url(self)
+            br.open(base_url)
 
             # submit the login form using credentials
             br.select_form(name='loginform')
@@ -34,10 +33,6 @@ class Poche(BasicNewsRecipe):
 
     def parse_index(self):
 
-        base_url = self.app_url + '/u/' + self.username + '/' \
-            if self.app_url == 'http://app.inthepoche.com' \
-            else self.app_url  # self-hosted poche
-
         # init values before loop
         page_count = 1  # poche page iterator
         articles_count = 0  # extracted articles counter
@@ -46,6 +41,8 @@ class Poche(BasicNewsRecipe):
         articles = {}
         key = None
         ans = []
+
+        base_url = get_base_url(self)
 
         # stop if no more articles or reached max articles limit
         while ((articles_count < self.max_articles_per_feed) and
@@ -98,3 +95,10 @@ class Poche(BasicNewsRecipe):
 
         ans = [(key, articles[key]) for key in articles.keys()]
         return ans
+
+
+def get_base_url(self):
+    url = self.app_url + '/u/' + self.username + '/' \
+        if self.app_url == 'http://app.inthepoche.com' \
+        else self.app_url + '/'  # self-hosted poche
+    return url
