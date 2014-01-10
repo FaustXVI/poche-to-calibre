@@ -1,15 +1,15 @@
 #!/bin/sh
 
 TEST_FOLDER=/tmp/pocheToCalibreTest
+FILE_TARGET=pocheToCalibre.epub
 
-ebook-convert pocheToCalibre.recipe .epub --test -vv --debug-pipeline debug --username pocheToCalibre --password pocheToCalibre
+rm -rf $FILE_TARGET $TEST_FOLDER
 
-rm -rf $TEST_FOLDER
-mkdir $TEST_FOLDER
-unzip pocheToCalibre.epub -d $TEST_FOLDER > /dev/null
+ebook-convert pocheToCalibre.recipe $FILE_TARGET --test -vv --debug-pipeline debug --username pocheToCalibre --password pocheToCalibre &&
 
-rm $TEST_FOLDER/content.opf $TEST_FOLDER/toc.ncx
-
+mkdir -p $TEST_FOLDER &&
+unzip $FILE_TARGET -d $TEST_FOLDER > /dev/null &&
+rm $TEST_FOLDER/content.opf $TEST_FOLDER/toc.ncx &&
 diff -r $TEST_FOLDER testTarget
 
 if [ $? -eq 0 ]

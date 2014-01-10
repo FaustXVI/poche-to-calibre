@@ -18,18 +18,7 @@ class Poche(BasicNewsRecipe):
 
     def get_browser(self):
         br = BasicNewsRecipe.get_browser(self)
-
-        # poche login
-        if self.username and self.password:
-            base_url = get_base_url(self)
-            br.open(base_url)
-
-            # submit the login form using credentials
-            br.select_form(name='loginform')
-            br['login'] = self.username
-            br['password'] = self.password
-            br.submit()
-
+        self.authentify_to_poche(br)
         return br
 
     def parse_index(self):
@@ -43,7 +32,7 @@ class Poche(BasicNewsRecipe):
         key = None
         ans = []
 
-        base_url = get_base_url(self)
+        base_url = self.get_base_url()
 
         # stop if no more articles or reached max articles limit
         while ((articles_count < self.max_articles_per_feed) and
@@ -67,7 +56,7 @@ class Poche(BasicNewsRecipe):
                     continue
 
                 # extract article info
-                key = get_contents_key(self, div)
+                key = self.get_contents_key(div)
                 url = base_url + a['href']
                 title = self.tag_to_string(a, use_alt=False)
                 description = url
@@ -94,23 +83,32 @@ class Poche(BasicNewsRecipe):
         ans = [(key, articles[key]) for key in articles.keys()]
         return ans
 
+    def authentify_to_poche(self,browser):
+        """Login into poche application submitting the login form using the given username and password"""
+        if self.username and self.password:
+            base_url = self.get_base_url()
+            browser.open(base_url)
+            browser.select_form(name='loginform')
+            browser['login'] = self.username
+            browser['password'] = self.password
+            browser.submit()
 
-def get_base_url(self):
-    """Gets poche base url. """
-    url = self.app_url + '/u/' + self.username + '/' \
-        if self.app_url == 'http://app.inthepoche.com' \
-        else self.app_url + '/'  # self-hosted poche
-    return url
+    def get_base_url(self):
+        """Gets poche base url. """
+        url = self.app_url + '/u/' + self.username + '/' \
+            if self.app_url == 'http://app.inthepoche.com' \
+            else self.app_url + '/'  # self-hosted poche
+        return url
 
 
-def get_contents_key(self, div):
-    """Gets key tag from article. """
-
-    if self.contents_key == 'read-time':
-        a_class = 'reading-time'
-    else:
-        a_class = 'tool link'
-
-    key = self.tag_to_string(div.find(
-        'a', attrs={'class': [a_class]}))
-    return key
+    def get_contents_key(self, div):
+        """Gets key tag from article. """
+    
+        if self.contents_key == 'read-time':
+            a_class = 'reading-time'
+        else:
+            a_class = 'tool link'
+    
+        key = self.tag_to_string(div.find(
+            'a', attrs={'class': [a_class]}))
+        return key
