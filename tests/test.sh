@@ -2,10 +2,13 @@
 
 TEST_FOLDER=/tmp/pocheToCalibreTest
 FILE_TARGET=pocheToCalibre.epub
+RECIPE=pocheToCalibre.recipe
+
+cp ../pocheToCalibre.py $RECIPE
 
 rm -rf $FILE_TARGET $TEST_FOLDER
 
-ebook-convert pocheToCalibre.recipe $FILE_TARGET --test -vv --debug-pipeline debug --username pocheToCalibre --password pocheToCalibre &&
+ebook-convert $RECIPE $FILE_TARGET --test -vv --debug-pipeline debug --username pocheToCalibre --password pocheToCalibre &&
 
 mkdir -p $TEST_FOLDER &&
 unzip $FILE_TARGET -d $TEST_FOLDER > /dev/null &&
