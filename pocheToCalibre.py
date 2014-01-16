@@ -33,7 +33,7 @@ class Poche(BasicNewsRecipe):
         base_url = self.get_base_url()
         soup = self.index_to_soup(base_url)
         pageCounter = PageCounter(soup)
-        pageParser = PageParser(pageCounter,base_url)
+        pageParser = PageParser(pageCounter,base_url,self)
 
         while not pageCounter.is_max_reached():
             page_url = base_url + "?view=home&sort=id&p=" + str(pageCounter.current_page_number())
@@ -81,10 +81,12 @@ class PageParser():
     ans = []
     pageCounter = None
     base_url = None
+    browser = None
 
-    def __init__(self,pageCounter,base_url):
+    def __init__(self,pageCounter,base_url,browser):
         self.pageCounter = pageCounter
         self.base_url = base_url
+        self.browser = browser
     
     def parse(self,page):
         for div in page.findAll(True, attrs={'class': ['entrie']}):
@@ -123,11 +125,12 @@ class PageParser():
         """Gets key tag from article. """
     
         if self.contents_key == 'read-time':
-            a_class = 'reading-time'
+            key_tag = div.find('a', attrs={'class': ['reading-time']})
         else:
-            a_class = 'tool link'
+            url = 'http://' + BasicNewsRecipe.tag_to_string(div.find('a', attrs={'class': ['tool link']}))
+            soup = self.browser.index_to_soup(url)
+            key_tag = soup.find('title')
 
-        key_tag = div.find('a', attrs={'class': [a_class]})
         return BasicNewsRecipe.tag_to_string(key_tag)
 
     def get_articles(self):
