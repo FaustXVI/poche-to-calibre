@@ -6,7 +6,6 @@ from calibre.web.feeds.recipes import BasicNewsRecipe
 class Poche(BasicNewsRecipe):
 
     app_url = 'http://app.inthepoche.com'  # self-hosted or managed poche
-    contents_key = 'domain'  # [domain|read-time]
 
     title = 'Poche'
     __author__ = 'Xavier Detant, Dmitry Sandalov'
@@ -20,59 +19,6 @@ class Poche(BasicNewsRecipe):
         self.authentify_to_poche(br)
         return br
 
-    def parse_index(self):
-
-        articles = {}
-        key = None
-        ans = []
-
-        base_url = self.get_base_url()
-        soup = self.index_to_soup(base_url)
-        pageCounter = PageCounter(soup)
-        # stop if no more articles or reached max articles limit
-        while not pageCounter.is_max_reached():
-
-            # open poche on desired page
-            soup = self.index_to_soup(
-                base_url + "?view=home&sort=id&p=" + str(pageCounter.current_page_number()))
-
-            # extract articles from entrie divs, articles num from nb-results
-            for div in soup.findAll(True, attrs={
-                    'class': ['entrie']}):
-
-                # continue if no article link
-                a = div.find('a', href=True)
-                if not a:
-                    continue
-
-                # extract article info
-                key = self.get_contents_key(div)
-                url = base_url + a['href']
-                title = self.tag_to_string(a, use_alt=False)
-                description = url
-                pubdate = strftime('%a, %d %b')
-                summary = div.find('p')
-                if summary:
-                    description = self.tag_to_string(summary, use_alt=False)
-                feed = key if key else 'Uncategorized'
-                if not feed in articles.keys():
-                    articles[feed] = []
-
-                # finally put articles to list
-                articles[feed].append(dict(
-                    title=title, url=url, date=pubdate,
-                    description=description, content=''))
-                pageCounter.article_added()
-
-                if pageCounter.is_max_reached():
-                    print "Max reached"
-                    break
-
-            pageCounter.page_treated()
-
-        ans = [(key, articles[key]) for key in articles.keys()]
-        return ans
-
     def authentify_to_poche(self,browser):
         """Login into poche application submitting the login form using the given username and password"""
         if self.username and self.password:
@@ -83,25 +29,26 @@ class Poche(BasicNewsRecipe):
             browser['password'] = self.password
             browser.submit()
 
+    def parse_index(self):
+        base_url = self.get_base_url()
+        soup = self.index_to_soup(base_url)
+        pageCounter = PageCounter(soup)
+        pageParser = PageParser(pageCounter,base_url)
+
+        while not pageCounter.is_max_reached():
+            page_url = base_url + "?view=home&sort=id&p=" + str(pageCounter.current_page_number())
+            soup = self.index_to_soup(page_url)
+            pageParser.parse(soup)
+            pageCounter.page_treated()
+
+        return pageParser.get_articles()
+
     def get_base_url(self):
         """Gets poche base url. """
         url = self.app_url + '/u/' + self.username + '/' \
             if self.app_url == 'http://app.inthepoche.com' \
             else self.app_url + '/'  # self-hosted poche
         return url
-
-
-    def get_contents_key(self, div):
-        """Gets key tag from article. """
-    
-        if self.contents_key == 'read-time':
-            a_class = 'reading-time'
-        else:
-            a_class = 'tool link'
-    
-        key = self.tag_to_string(div.find(
-            'a', attrs={'class': [a_class]}))
-        return key
 
 class PageCounter():
     page_count = 1
@@ -126,3 +73,62 @@ class PageCounter():
 
     def current_page_number(self):
         return self.page_count
+
+class PageParser():
+
+    contents_key = 'domain'  # [domain|read-time]
+    articles = {}
+    ans = []
+    pageCounter = None
+    base_url = None
+
+    def __init__(self,pageCounter,base_url):
+        self.pageCounter = pageCounter
+        self.base_url = base_url
+    
+    def parse(self,page):
+        for div in page.findAll(True, attrs={'class': ['entrie']}):
+            key = self.get_contents_key(div)
+            article = self.extract_info(div)
+            if article:
+                self.add_article(key,article)
+            if self.pageCounter.is_max_reached():
+                print "Max reached"
+                break
+
+    def extract_info(self,div):
+        a = div.find('a', href=True)
+        if a:
+            url = self.base_url + a['href']
+            title = BasicNewsRecipe.tag_to_string(a, use_alt=False)
+            description = url
+            pubdate = strftime('%a, %d %b')
+            summary = div.find('p')
+            if summary:
+                description = BasicNewsRecipe.tag_to_string(summary, use_alt=False)
+            return dict(title=title, url=url, date=pubdate,description=description, content='') 
+
+    def add_article(self,key,article):
+        feed = self.get_category(key)
+        if not feed in self.articles.keys():
+            self.articles[feed] = []
+        self.articles[feed].append(article)
+        self.pageCounter.article_added()
+        
+
+    def get_category(self,key):
+        return key if key else 'Uncategorized'
+
+    def get_contents_key(self, div):
+        """Gets key tag from article. """
+    
+        if self.contents_key == 'read-time':
+            a_class = 'reading-time'
+        else:
+            a_class = 'tool link'
+
+        key_tag = div.find('a', attrs={'class': [a_class]})
+        return BasicNewsRecipe.tag_to_string(key_tag)
+
+    def get_articles(self):
+        return [(key, self.articles[key]) for key in self.articles.keys()]
