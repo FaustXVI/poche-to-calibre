@@ -6,7 +6,6 @@ from calibre.web.feeds.recipes import BasicNewsRecipe
 class Poche(BasicNewsRecipe):
 
     app_url = 'http://app.inthepoche.com'  # self-hosted or managed poche
-    max_articles_per_feed = 15  # articles in output file
     contents_key = 'domain'  # [domain|read-time]
 
     title = 'Poche'
@@ -23,32 +22,23 @@ class Poche(BasicNewsRecipe):
 
     def parse_index(self):
 
-        # init values before loop
-        page_count = 1  # poche page iterator
-        articles_count = 0  # extracted articles counter
-        articles_number = 1  # total articles in poche library
-
         articles = {}
         key = None
         ans = []
 
         base_url = self.get_base_url()
-
+        soup = self.index_to_soup(base_url)
+        pageCounter = PageCounter(soup)
         # stop if no more articles or reached max articles limit
-        while ((articles_count < self.max_articles_per_feed) and
-               (articles_count < articles_number)):
+        while not pageCounter.is_max_reached():
 
             # open poche on desired page
             soup = self.index_to_soup(
-                base_url + "?view=home&sort=id&p=" + str(page_count))
+                base_url + "?view=home&sort=id&p=" + str(pageCounter.current_page_number()))
 
             # extract articles from entrie divs, articles num from nb-results
             for div in soup.findAll(True, attrs={
-                    'class': ['entrie', 'nb-results']}):
-
-                # get total articles in poche lib
-                if div['class'] == 'nb-results':
-                    articles_number = int(re.findall(r'\d+', div.string)[0])
+                    'class': ['entrie']}):
 
                 # continue if no article link
                 a = div.find('a', href=True)
@@ -72,13 +62,13 @@ class Poche(BasicNewsRecipe):
                 articles[feed].append(dict(
                     title=title, url=url, date=pubdate,
                     description=description, content=''))
-                articles_count += 1
+                pageCounter.article_added()
 
-                # exit loop if max_articles_per_feed exceeded
-                if not ((articles_count < self.max_articles_per_feed) and
-                        (articles_count < articles_number)):
+                if pageCounter.is_max_reached():
+                    print "Max reached"
                     break
-            page_count += 1
+
+            pageCounter.page_treated()
 
         ans = [(key, articles[key]) for key in articles.keys()]
         return ans
@@ -112,3 +102,27 @@ class Poche(BasicNewsRecipe):
         key = self.tag_to_string(div.find(
             'a', attrs={'class': [a_class]}))
         return key
+
+class PageCounter():
+    page_count = 1
+    articles_count = 0
+    articles_number = 1
+    max_articles = 15
+    
+    def __init__(self,indexPage):
+        nb_results = indexPage.find(True, attrs={'class': 'nb-results'})
+        if nb_results != None:
+            self.articles_number = int(re.findall(r'\d+', nb_results.string)[0])
+
+    def is_max_reached(self):
+        "True if the max number of article has been reached"
+        return ((self.articles_count >= self.max_articles) or (self.articles_count >= self.articles_number))
+
+    def article_added(self):
+        self.articles_count += 1
+
+    def page_treated(self):
+        self.page_count += 1
+
+    def current_page_number(self):
+        return self.page_count
